@@ -2,10 +2,13 @@
 import { ref, onMounted } from 'vue';
 import * as postsApi from '@/api/posts';
 import Loader from './Loader.vue';
+import AddPostForm from './AddPostForm.vue';
+import Sidebar from './Sidebar.vue';
 
 const posts = ref([]);
 const errorMessage = ref(null);
 const isLoading = ref(true);
+const isSidebarOpen = ref(false);
 
 onMounted(async () => {
   try {
@@ -16,6 +19,18 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+const openSideBar = () => {
+  isSidebarOpen.value = true;
+};
+
+const addNewPost = newPost => {
+  posts.value.push(newPost);
+};
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false;
+};
 </script>
 
 <template>
@@ -24,7 +39,9 @@ onMounted(async () => {
       <div class="block">
         <div class="block is-flex is-justify-content-space-between">
           <p class="title">Posts</p>
-          <button type="button" class="button is-link">Add New Post</button>
+          <button type="button" class="button is-link" @click="openSideBar">
+            Add New Post
+          </button>
         </div>
 
         <div v-if="errorMessage" class="has-text-centered">
@@ -61,7 +78,27 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+        <TransitionGroup name="sidebar">
+          <Sidebar v-if="isSidebarOpen">
+            <AddPostForm
+              @postAdded="addNewPost"
+              @close-sidebar="closeSidebar"
+            />
+          </Sidebar>
+        </TransitionGroup>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: all 0.5s ease;
+}
+.sidebar-enter-from,
+.sidebar-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+</style>
