@@ -10,7 +10,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <article class="message is-small">
+  <article class="message is-small mt-4">
     <div class="message-header">
       <a :href="`mailto:${comment.email}`">{{ comment.name }} </a>
       <button type="button" class="delete is-small" aria-label="delete">

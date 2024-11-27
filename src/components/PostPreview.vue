@@ -6,6 +6,7 @@ import Comment from './Comment.vue';
 import NoCommentsYet from './NoCommentsYet.vue';
 import Loader from './Loader.vue';
 import WriteCommentButton from './WriteCommentButton.vue';
+import AddCommentForm from './AddCommentForm.vue';
 
 const props = defineProps({
   post: {
@@ -25,6 +26,7 @@ const props = defineProps({
 const comments = ref([]);
 const isLoading = ref(true);
 const errorMessage = ref(null);
+const isCommentFormShown = ref(false);
 
 const fetchComments = async () => {
   try {
@@ -54,6 +56,11 @@ const deletePost = async () => {
     errorMessage.value = 'Failed to delete post';
   }
 };
+
+const handleNewComment = newComment => {
+  comments.value.push(newComment);
+  isCommentFormShown.value = false;
+};
 </script>
 
 <template>
@@ -75,13 +82,22 @@ const deletePost = async () => {
     <p data-cy="PostBody">{{ post.body }}</p>
   </div>
 
-  <div v-if="comments.length === 0 && !isLoading && !errorMessage">
-    <NoCommentsYet />
-  </div>
   <div v-if="isLoading" class="has-text-centered"><Loader /></div>
 
-  <div v-else v-for="comment in comments" :key="comment.id">
-    <Comment :comment="comment" />
+  <div class="block" v-if="!isCommentFormShown">
+    <div v-for="comment in comments" :key="comment.id">
+      <Comment :comment="comment" />
+    </div>
+    <NoCommentsYet
+      v-if="comments.length === 0 && !isLoading && !errorMessage"
+    />
+    <WriteCommentButton @click="isCommentFormShown = !isCommentFormShown" />
   </div>
-  <WriteCommentButton />
+
+  <AddCommentForm
+    v-else
+    :post="post"
+    @close-sidebar="isCommentFormShown = false"
+    @comment-added="handleNewComment"
+  />
 </template>

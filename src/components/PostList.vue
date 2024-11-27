@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import * as postsApi from '@/api/posts';
 import Loader from './Loader.vue';
 import AddPostForm from './AddPostForm.vue';
@@ -23,6 +23,12 @@ onMounted(async () => {
   }
 });
 
+watch(selectedPost, (newSelectedPostId, prevSelectedPostId) => {
+  if (newSelectedPostId?.id !== prevSelectedPostId?.id && isEditing.value) {
+    isEditing.value = false;
+  }
+});
+
 const openSideBar = () => {
   isSidebarOpen.value = true;
   selectedPost.value = null;
@@ -30,14 +36,14 @@ const openSideBar = () => {
 };
 
 const addNewPost = newPost => {
-  if (newPost.id) {
-    const index = posts.value.findIndex(post => post.id === newPost.id);
-    if (index !== -1) {
-      posts.value[index] = newPost; //Оновлення існуючого поста
-    }
+  const index = posts.value.findIndex(post => post.id === newPost.id);
+
+  if (index !== -1) {
+    posts.value[index] = newPost; //Оновлення існуючого поста
   } else {
     posts.value.push(newPost);
   }
+
   isEditing.value = false;
   selectedPost.value = newPost;
 };
@@ -54,6 +60,7 @@ const previewSelectedPost = post => {
   } else {
     isSidebarOpen.value = true;
     selectedPost.value = post;
+    // isEditing.value = false;
   }
 };
 
@@ -74,7 +81,14 @@ const handleDelete = postId => {
       <div class="block">
         <div class="block is-flex is-justify-content-space-between">
           <p class="title">Posts</p>
-          <button type="button" class="button is-link" @click="openSideBar">
+          <button
+            type="button"
+            class="button is-link"
+            :class="{
+              'is-light': isSidebarOpen && !selectedPost,
+            }"
+            @click="openSideBar"
+          >
             Add New Post
           </button>
         </div>
@@ -111,6 +125,9 @@ const handleDelete = postId => {
                 <button
                   type="button"
                   class="button is-link"
+                  :class="{
+                    'is-light': isSidebarOpen && post.id === selectedPost?.id,
+                  }"
                   @click="previewSelectedPost(post)"
                 >
                   {{ post.id === selectedPost?.id ? 'Close' : 'Open' }}

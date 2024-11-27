@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue';
 import * as postsApi from '@/api/posts';
+import InputField from './InputField.vue';
+import TextAreaField from './TextAreaField.vue';
 
 const emit = defineEmits(['postAdded', 'closeSidebar']);
 
@@ -14,12 +16,13 @@ const props = defineProps({
 const title = ref('');
 const content = ref('');
 const error = ref('');
+const errorTitle = ref('');
+const errorBody = ref('');
 
 watch(
   () => props.post,
   newPost => {
     if (newPost) {
-      console.log(newPost);
       title.value = newPost.title;
       content.value = newPost.body;
     } else {
@@ -30,9 +33,28 @@ watch(
   { immediate: true },
 );
 
+watch(title, newTitle => {
+  if (newTitle) {
+    errorTitle.value = '';
+  }
+});
+
+watch(content, newContent => {
+  if (newContent) {
+    errorBody.value = '';
+  }
+});
+
 const handleSubmit = async () => {
+  if (!title.value) {
+    errorTitle.value = 'Field is required';
+  }
+
+  if (!content.value) {
+    errorBody.value = 'Field is required';
+  }
+
   if (!title.value || !content.value) {
-    error.value = 'Field is required';
     return;
   }
 
@@ -57,9 +79,10 @@ const handleSubmit = async () => {
 
     title.value = '';
     content.value = '';
+    errorTitle.value = '';
+    errorBody.value = '';
     error.value = '';
   } catch (err) {
-    console.log(err);
     error.value = 'Failed to create post. Please try again.';
   }
 };
@@ -70,31 +93,20 @@ const handleSubmit = async () => {
     <h2>{{ props.post ? 'Post editing' : 'Create new post' }}</h2>
 
     <form @submit.prevent="handleSubmit">
-      <div class="field">
-        <label class="label">Title</label>
-        <div class="control">
-          <input
-            v-model="title"
-            class="input"
-            type="text"
-            placeholder="Post title"
-            required
-          />
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="label">Write Post Body</label>
-        <div class="control">
-          <textarea
-            v-model="content"
-            class="textarea"
-            :class="{ 'is-danger': error }"
-            placeholder="Post body"
-            required
-          ></textarea>
-        </div>
-      </div>
+      <InputField
+        v-model="title"
+        title="Title"
+        :error-message="errorTitle"
+        name="title"
+        placeholder="Post title"
+      />
+      <TextAreaField
+        v-model="content"
+        title="Write Post Body"
+        :error-message="errorBody"
+        name="body"
+        placeholder="Post body"
+      />
 
       <div v-if="error" class="has-text-danger">
         <p>{{ error }}</p>
