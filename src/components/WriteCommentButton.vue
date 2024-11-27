@@ -1,3 +1,3 @@
 <template>
-  <button type="button" class="button is-link">Write a comment</button>
+  <button type="button" class="button is-link mt-4">Write a comment</button>
 </template>

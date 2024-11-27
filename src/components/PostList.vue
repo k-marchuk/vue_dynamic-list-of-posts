@@ -4,11 +4,14 @@ import * as postsApi from '@/api/posts';
 import Loader from './Loader.vue';
 import AddPostForm from './AddPostForm.vue';
 import Sidebar from './Sidebar.vue';
+import PostPreview from './PostPreview.vue';
 
 const posts = ref([]);
 const errorMessage = ref(null);
 const isLoading = ref(true);
 const isSidebarOpen = ref(false);
+const selectedPost = ref(null);
+const isEditing = ref(false);
 
 onMounted(async () => {
   try {
@@ -22,14 +25,46 @@ onMounted(async () => {
 
 const openSideBar = () => {
   isSidebarOpen.value = true;
+  selectedPost.value = null;
+  isEditing.value = false;
 };
 
 const addNewPost = newPost => {
-  posts.value.push(newPost);
+  if (newPost.id) {
+    const index = posts.value.findIndex(post => post.id === newPost.id);
+    if (index !== -1) {
+      posts.value[index] = newPost; //Оновлення існуючого поста
+    }
+  } else {
+    posts.value.push(newPost);
+  }
+  isEditing.value = false;
+  selectedPost.value = newPost;
 };
 
 const closeSidebar = () => {
   isSidebarOpen.value = false;
+  selectedPost.value = null;
+  isEditing.value = false;
+};
+
+const previewSelectedPost = post => {
+  if (selectedPost.value?.id === post.id) {
+    closeSidebar();
+  } else {
+    isSidebarOpen.value = true;
+    selectedPost.value = post;
+  }
+};
+
+const handlePostEditing = post => {
+  isEditing.value = true;
+  selectedPost.value = { ...post }; //Зробиит копію поста щоб не мутувати його напряму
+};
+
+const handleDelete = postId => {
+  posts.value = posts.value.filter(post => post.id !== postId);
+  closeSidebar();
 };
 </script>
 
@@ -55,7 +90,7 @@ const closeSidebar = () => {
         >
           <p>No posts yet</p>
         </div>
-        <div v-if="isLoading" class="has-text-centered"><Loader /></div>
+        <div v-else-if="isLoading" class="has-text-centered"><Loader /></div>
 
         <table
           v-else
@@ -73,15 +108,30 @@ const closeSidebar = () => {
               <td>{{ post.id }}</td>
               <td>{{ post.title }}</td>
               <td class="has-text-right is-vcentered">
-                <button type="button" class="button is-link">Open</button>
+                <button
+                  type="button"
+                  class="button is-link"
+                  @click="previewSelectedPost(post)"
+                >
+                  {{ post.id === selectedPost?.id ? 'Close' : 'Open' }}
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+
         <TransitionGroup name="sidebar">
           <Sidebar v-if="isSidebarOpen">
+            <PostPreview
+              v-if="selectedPost && !isEditing"
+              :post="selectedPost"
+              :onEdit="handlePostEditing"
+              :onDelete="handleDelete"
+            />
             <AddPostForm
-              @postAdded="addNewPost"
+              v-else
+              :post="selectedPost"
+              @post-added="addNewPost"
               @close-sidebar="closeSidebar"
             />
           </Sidebar>

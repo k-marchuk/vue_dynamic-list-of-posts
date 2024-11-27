@@ -1,11 +1,34 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import * as postsApi from '@/api/posts';
+
 const emit = defineEmits(['postAdded', 'closeSidebar']);
+
+const props = defineProps({
+  post: {
+    type: Object,
+    required: true,
+  },
+});
 
 const title = ref('');
 const content = ref('');
 const error = ref('');
+
+watch(
+  () => props.post,
+  newPost => {
+    if (newPost) {
+      console.log(newPost);
+      title.value = newPost.title;
+      content.value = newPost.body;
+    } else {
+      title.value = '';
+      content.value = '';
+    }
+  },
+  { immediate: true },
+);
 
 const handleSubmit = async () => {
   if (!title.value || !content.value) {
@@ -13,15 +36,24 @@ const handleSubmit = async () => {
     return;
   }
 
-  try {
-    const newPost = {
-      title: title.value,
-      body: content.value,
-      userId: 1892,
-    };
+  const updatedPost = {
+    title: title.value,
+    body: content.value,
+  };
 
-    const createdPost = await postsApi.addPost(newPost);
-    emit('postAdded', createdPost);
+  let postToShow;
+
+  try {
+    if (props.post && props.post.id) {
+      postToShow = await postsApi.editPost(props.post.id, updatedPost);
+    } else {
+      postToShow = await postsApi.addPost({
+        title: title.value,
+        body: content.value,
+      });
+    }
+
+    emit('postAdded', postToShow);
 
     title.value = '';
     content.value = '';
@@ -35,7 +67,7 @@ const handleSubmit = async () => {
 
 <template>
   <div class="content">
-    <h2>Create new post</h2>
+    <h2>{{ props.post ? 'Post editing' : 'Create new post' }}</h2>
 
     <form @submit.prevent="handleSubmit">
       <div class="field">
@@ -70,7 +102,9 @@ const handleSubmit = async () => {
 
       <div class="field is-grouped">
         <div class="control">
-          <button type="submit" class="button is-link">Save</button>
+          <button type="submit" class="button is-link">
+            {{ props.post ? 'Save' : 'Create' }}
+          </button>
         </div>
         <div class="control">
           <button
