@@ -9,7 +9,6 @@ const emit = defineEmits(['postAdded', 'closeSidebar']);
 const props = defineProps({
   post: {
     type: Object,
-    required: true,
   },
 });
 
@@ -94,12 +93,13 @@ const handleSubmit = async () => {
 
     <form @submit.prevent="handleSubmit">
       <InputField
-        v-model="title"
+        v-model.trim="title"
         title="Title"
         :error-message="errorTitle"
         name="title"
         placeholder="Post title"
       />
+
       <TextAreaField
         v-model="content"
         title="Write Post Body"

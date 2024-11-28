@@ -5,6 +5,7 @@ import Loader from './Loader.vue';
 import AddPostForm from './AddPostForm.vue';
 import Sidebar from './Sidebar.vue';
 import PostPreview from './PostPreview.vue';
+import { getUserId } from '@/utils/user';
 
 const posts = ref([]);
 const errorMessage = ref(null);
@@ -12,10 +13,11 @@ const isLoading = ref(true);
 const isSidebarOpen = ref(false);
 const selectedPost = ref(null);
 const isEditing = ref(false);
+const userId = getUserId();
 
 onMounted(async () => {
   try {
-    posts.value = await postsApi.getPosts();
+    posts.value = await postsApi.getPosts(userId);
   } catch (err) {
     errorMessage.value = 'Failed to load posts';
   } finally {
@@ -39,7 +41,7 @@ const addNewPost = newPost => {
   const index = posts.value.findIndex(post => post.id === newPost.id);
 
   if (index !== -1) {
-    posts.value[index] = newPost; //Оновлення існуючого поста
+    posts.value[index] = newPost;
   } else {
     posts.value.push(newPost);
   }
@@ -60,16 +62,15 @@ const previewSelectedPost = post => {
   } else {
     isSidebarOpen.value = true;
     selectedPost.value = post;
-    // isEditing.value = false;
   }
 };
 
 const handlePostEditing = post => {
   isEditing.value = true;
-  selectedPost.value = { ...post }; //Зробиит копію поста щоб не мутувати його напряму
+  selectedPost.value = { ...post };
 };
 
-const handleDelete = postId => {
+const handlePostDelete = postId => {
   posts.value = posts.value.filter(post => post.id !== postId);
   closeSidebar();
 };
@@ -143,7 +144,7 @@ const handleDelete = postId => {
               v-if="selectedPost && !isEditing"
               :post="selectedPost"
               :onEdit="handlePostEditing"
-              :onDelete="handleDelete"
+              :onDelete="handlePostDelete"
             />
             <AddPostForm
               v-else

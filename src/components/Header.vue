@@ -1,3 +1,17 @@
+<script setup>
+import { getUser, removeUser } from '@/utils/user';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const { name } = getUser();
+
+const handleLogout = () => {
+  removeUser();
+  router.go();
+};
+</script>
+
 <template>
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-item">
@@ -7,10 +21,10 @@
       <div class="navbar-item">
         <div class="buttons">
           <div class="mr-5">
-            <p>User: {user.name}</p>
+            <p>User: {{ name }}</p>
           </div>
 
-          <a class="button is-light"> Logout </a>
+          <a class="button is-light" @click="handleLogout"> Logout </a>
         </div>
       </div>
     </div>

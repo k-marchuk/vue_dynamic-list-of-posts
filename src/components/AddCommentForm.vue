@@ -20,6 +20,7 @@ const error = ref('');
 const errorTitle = ref('');
 const errorEmail = ref('');
 const errorBody = ref('');
+const isLoading = ref(false);
 
 watch(email, newEmail => {
   if (newEmail.includes('@')) {
@@ -45,7 +46,10 @@ const handleSubmit = async () => {
   if (errorTitle.value || errorEmail.value || errorBody.value) {
     return;
   }
+
   try {
+    isLoading.value = true;
+
     const newComment = await commentsApi.addComment({
       postId: props.post.id,
       name: title.value,
@@ -54,12 +58,16 @@ const handleSubmit = async () => {
     });
 
     emit('commentAdded', newComment);
+
     title.value = '';
     email.value = '';
     content.value = '';
+
     emit('closeSidebar');
   } catch (err) {
     error.value = 'Failed to add comment. Please try again later.';
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
@@ -68,19 +76,21 @@ const handleSubmit = async () => {
   <div class="block">
     <form @submit.prevent="handleSubmit">
       <InputField
-        v-model="title"
+        v-model.trim="title"
         title="Author Name"
         :error-message="errorTitle"
         name="title"
         placeholder="Name Surname"
       />
+
       <InputField
-        v-model="email"
+        v-model.trim="email"
         title="Author Email"
         :error-message="errorEmail"
         name="title"
         placeholder="Your email"
       />
+
       <TextAreaField
         v-model="content"
         title="Write Comment Body"
@@ -91,7 +101,13 @@ const handleSubmit = async () => {
 
       <div class="field is-grouped">
         <div class="control">
-          <button type="submit" class="button is-link">Add Comment</button>
+          <button
+            type="submit"
+            class="button is-link"
+            :class="{ 'is-loading': isLoading }"
+          >
+            Add Comment
+          </button>
         </div>
         <div class="control">
           <button

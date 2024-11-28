@@ -51,7 +51,7 @@ const deletePost = async () => {
   try {
     await postsApi.deletePost(props.post.id);
 
-    props.onDelete(props.post.id); //сказати батьк. компоненту що пост був видалений
+    props.onDelete(props.post.id);
   } catch (err) {
     errorMessage.value = 'Failed to delete post';
   }
@@ -60,6 +60,10 @@ const deletePost = async () => {
 const handleNewComment = newComment => {
   comments.value.push(newComment);
   isCommentFormShown.value = false;
+};
+
+const handleCommentDelete = commentId => {
+  comments.value = comments.value.filter(comment => comment.id !== commentId);
 };
 </script>
 
@@ -84,15 +88,15 @@ const handleNewComment = newComment => {
 
   <div v-if="isLoading" class="has-text-centered"><Loader /></div>
 
-  <div class="block" v-if="!isCommentFormShown">
+  <template v-if="!isCommentFormShown">
     <div v-for="comment in comments" :key="comment.id">
-      <Comment :comment="comment" />
+      <Comment :comment="comment" :onDelete="handleCommentDelete" />
     </div>
     <NoCommentsYet
       v-if="comments.length === 0 && !isLoading && !errorMessage"
     />
     <WriteCommentButton @click="isCommentFormShown = !isCommentFormShown" />
-  </div>
+  </template>
 
   <AddCommentForm
     v-else
