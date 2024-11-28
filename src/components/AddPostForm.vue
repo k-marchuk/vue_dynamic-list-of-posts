@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import * as postsApi from '@/api/posts';
 import InputField from './InputField.vue';
 import TextAreaField from './TextAreaField.vue';
+import { getUserId } from '@/utils/user';
 
 const emit = defineEmits(['postAdded', 'closeSidebar']);
 
@@ -17,6 +18,7 @@ const content = ref('');
 const error = ref('');
 const errorTitle = ref('');
 const errorBody = ref('');
+const userId = getUserId();
 
 watch(
   () => props.post,
@@ -69,6 +71,7 @@ const handleSubmit = async () => {
       postToShow = await postsApi.editPost(props.post.id, updatedPost);
     } else {
       postToShow = await postsApi.addPost({
+        userId: userId,
         title: title.value,
         body: content.value,
       });

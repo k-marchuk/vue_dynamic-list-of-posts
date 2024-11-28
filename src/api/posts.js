@@ -10,7 +10,6 @@ export const getPosts = async userId => {
 
 export const addPost = async postData => {
   const response = await client.post(`/posts`, {
-    userId: USER_ID,
     ...postData,
   });
 
